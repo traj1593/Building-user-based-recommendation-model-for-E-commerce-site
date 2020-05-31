@@ -1,0 +1,66 @@
+Rating_Animated_Movies = read.csv("Amazon - Movies and TV Ratings.csv",header=T)
+View(Rating_Animated_Movies)
+Row_names = Rating_Animated_Movies[,1]
+rownames(Rating_Animated_Movies) <- Row_names
+Rating_Animated_Movies = Rating_Animated_Movies[,-1]
+View(Rating_Animated_Movies)
+
+###### Task 1 (A)-	Which movies have maximum views/ratings
+NonNA_Counts = function(x) {
+                          sum(!is.na(x))
+                          }
+
+
+Count_of_Ratings = apply(Rating_Animated_Movies,2,NonNA_Counts)
+Count_of_Ratings = as.data.frame(Count_of_Ratings)
+View(Count_of_Ratings)
+
+library(dplyr)
+x = rownames(Count_of_Ratings)
+Count_of_Ratings1 = transform(Count_of_Ratings,Movie = c(x))
+View(Count_of_Ratings1)
+
+Count_of_Ratings2 = arrange(Count_of_Ratings1,desc(Count_of_Ratings))
+View(Count_of_Ratings2)
+
+###### Task 1 (B)-	What is the average rating for each movie. Define top 5 movies with maximum average rating.
+Average_movie_Ratings = apply(Rating_Animated_Movies,2,mean,na.rm=T)
+Average_movie_Ratings = as.data.frame(Average_movie_Ratings)
+View(Average_movie_Ratings)
+
+library(dplyr)
+x = rownames(Average_movie_Ratings)
+Average_movie_Ratings1 = transform(Average_movie_Ratings,Movie = c(x))
+View(Average_movie_Ratings1)
+
+arrange(Average_movie_Ratings1,desc(Average_movie_Ratings))[1:5,]
+
+
+###### Task 1 (c)-	Define bottom 5 movies which are least audiences
+Movies_with_audiences = filter(Count_of_Ratings2,Count_of_Ratings!=0)
+View(Movies_with_audiences)
+arrange(Movies_with_audiences,Count_of_Ratings)[1:5,]
+
+
+
+########## Task 2 - Recommendation Model
+Rating_Animated_Movies1 = as(Rating_Animated_Movies,"matrix")
+library(recommenderlab)
+Rating_Animated_Movies2 = as(Rating_Animated_Movies1,"realRatingMatrix")
+class(Rating_Animated_Movies2)
+
+# Task 2 (A) -Divide data into training and test data
+Sample1 = sample(2,nrow(Rating_Animated_Movies2),prob=c(.8,.2),replace=T)
+Sample1
+Movies_train = Rating_Animated_Movies2[Sample1==1,]
+Movies_test = Rating_Animated_Movies2[Sample1==2,]
+Movies_train
+Movies_test
+
+# Task 2 (B) - Build recommendation model on Training data
+ReccMovie = Recommender(Movies_train,"UBCF")
+
+# Task 2 (C) - Make predictions on test data
+Prediction1 = predict(ReccMovie,Movies_test,n=10)
+
+View(as(Prediction1,"matrix"))
